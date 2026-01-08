@@ -14,12 +14,6 @@
     @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    /* 輪播動畫樣式 */
-    .fade-enter { opacity: 0; transform: translateX(20px); }
-    .fade-enter-active { opacity: 1; transform: translateX(0); transition: opacity 500ms, transform 500ms; }
-    .fade-exit { opacity: 1; transform: translateX(0); }
-    .fade-exit-active { opacity: 0; transform: translateX(-20px); transition: opacity 500ms, transform 500ms; }
   </style>
 </head>
 <body class="bg-[#FAF7F2] text-[#5E4B40]">
@@ -282,40 +276,36 @@
 
     const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => { /* ... existing ProductModal ... */ const [selectedColor, setSelectedColor] = useState(''); const [selectedShape, setSelectedShape] = useState(''); const [currentImgIdx, setCurrentImgIdx] = useState(0); const [touchStart, setTouchStart] = useState(null); const [touchEnd, setTouchEnd] = useState(null); const minSwipeDistance = 50; useEffect(() => { if (isOpen && product) { setSelectedColor(product.colors?.[0] || ''); const shouldSelectShape = !product.category || product.category === 'nails'; setSelectedShape(shouldSelectShape ? (product.shapes?.[0] || '') : ''); setCurrentImgIdx(0); setTouchStart(null); setTouchEnd(null); } }, [isOpen, product]); const nextImage = (e) => { if(e) e.stopPropagation(); if (currentImgIdx < product.images.length - 1) setCurrentImgIdx(prev => prev + 1); }; const prevImage = (e) => { if(e) e.stopPropagation(); if (currentImgIdx > 0) setCurrentImgIdx(prev => prev - 1); }; const onTouchStart = (e) => { setTouchEnd(null); setTouchStart(e.targetTouches[0].clientX); }; const onTouchMove = (e) => { setTouchEnd(e.targetTouches[0].clientX); }; const onTouchEnd = () => { if (!touchStart || !touchEnd) return; const distance = touchStart - touchEnd; if (distance > minSwipeDistance) nextImage(); if (distance < -minSwipeDistance) prevImage(); }; if (!isOpen || !product) return null; const currentMediaUrl = product.images[currentImgIdx]; const isCurrentVideo = isVideo(currentMediaUrl); const isNails = !product.category || product.category === 'nails'; const discountLabel = getDiscountLabel(product.price, product.originalPrice); const visibleTags = product.tags ? product.tags.filter(t => !isSystemTag(t)) : []; return ( <div className="fixed inset-0 z-[60] flex items-center justify-center p-4"> <div className="absolute inset-0 bg-[#5E4B40]/40 backdrop-blur-sm" onClick={onClose}></div> <div className="relative bg-[#FDFBF7] w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl grid md:grid-cols-2 animate-slide-up"> <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 bg-white/50 rounded-full hover:bg-white text-[#5E4B40] transition-colors"><X size={24} /></button> <div className="relative bg-[#F5E6D3]/30 h-[300px] md:h-full min-h-[400px] group select-none flex items-center justify-center bg-black" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}> {isCurrentVideo ? ( <video src={currentMediaUrl} className="w-full h-full object-contain" controls autoPlay playsInline /> ) : ( <img src={currentMediaUrl} alt={product.name} className="w-full h-full object-cover transition-opacity duration-300"/> )} {discountLabel && ( <div className="absolute top-4 left-4 bg-[#C0392B] text-white text-sm font-bold px-3 py-1.5 rounded shadow-md z-20 flex items-center gap-1"> <Tag size={14} /> 限時 {discountLabel} </div> )} {product.images.length > 1 && ( <> {currentImgIdx > 0 && <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/60 hover:bg-white rounded-full text-[#5E4B40] opacity-0 group-hover:opacity-100 transition-opacity md:flex hidden shadow-sm"><ChevronLeft size={24} /></button>} {currentImgIdx < product.images.length - 1 && <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/60 hover:bg-white rounded-full text-[#5E4B40] opacity-0 group-hover:opacity-100 transition-opacity md:flex hidden shadow-sm"><ChevronRight size={24} /></button>} <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-white/30 backdrop-blur-sm rounded-full"> {product.images.map((url, idx) => ( <button key={idx} onClick={(e) => { e.stopPropagation(); setCurrentImgIdx(idx); }} className={`w-3 h-3 rounded-full transition-all overflow-hidden flex items-center justify-center ${currentImgIdx === idx ? 'bg-[#5E4B40] w-5' : 'bg-white shadow-sm'}`}> {isVideo(url) && currentImgIdx !== idx && <Play size={8} className="text-[#5E4B40]" fill="currentColor"/>} </button> ))} </div> </> )} </div> <div className="p-6 md:p-10 flex flex-col"> <div className="flex gap-2 flex-wrap mb-3"> {product.category && product.category !== 'nails' && ( <span className="px-2 py-1 bg-[#8B5E3C] text-white text-xs rounded-md"> {CATEGORIES.find(c => c.id === product.category)?.name} </span> )} {product.tags && product.tags.map(tag => <span key={tag} className="px-2 py-1 bg-[#F2EBE5] text-[#846C5B] text-xs rounded-md">#{tag}</span>)} </div> <h2 className="text-3xl font-serif text-[#5E4B40] mb-2">{product.name}</h2> <div className="flex items-end gap-3 mb-6"> <p className="text-2xl font-bold text-[#8B5E3C]"> {product.price === 0 ? "免費索取" : `NT$ ${product.price}`} </p> {product.originalPrice > product.price && ( <p className="text-[#A4907C] line-through mb-1">NT$ {product.originalPrice}</p> )} </div> <p className="text-[#846C5B] mb-8 leading-relaxed text-sm md:text-base border-b border-[#E6CCB2] pb-6">{product.description}</p> <div className="space-y-6 mb-8 flex-1"> {product.colors && product.colors.length > 0 && product.colors[0] !== '' && ( <div> <label className="block text-sm font-bold text-[#5E4B40] mb-3">選擇顏色/規格</label> <div className="flex flex-wrap gap-3"> {product.colors.map(color => ( <button key={color} onClick={() => setSelectedColor(color)} className={`px-4 py-2 border rounded-lg text-sm transition-all ${selectedColor === color ? 'border-[#8B5E3C] bg-[#8B5E3C] text-white shadow-md' : 'border-[#D4C5B0] text-[#846C5B] hover:border-[#8B5E3C] bg-white'}`}>{color}</button> ))} </div> </div> )} {isNails && ( <div> <label className="block text-sm font-bold text-[#5E4B40] mb-3">選擇甲型</label> <div className="grid grid-cols-3 sm:grid-cols-4 gap-2"> {product.shapes && product.shapes.map(shape => ( <button key={shape} onClick={() => setSelectedShape(shape)} className={`py-2 px-1 border rounded-lg text-xs md:text-sm transition-all text-center truncate ${selectedShape === shape ? 'border-[#8B5E3C] bg-[#F5E6D3] text-[#5E4B40] font-bold ring-1 ring-[#8B5E3C]' : 'border-[#E6CCB2] text-[#846C5B] hover:border-[#8B5E3C] bg-white'}`}>{shape}</button> ))} </div> </div> )} </div> <button onClick={() => { onAddToCart({ ...product, selectedColor, selectedShape }); onClose(); }} className="w-full bg-[#5E4B40] text-[#FDFBF7] py-4 rounded-xl font-bold hover:bg-[#4A3B32] transition-colors flex items-center justify-center gap-2 shadow-lg active:scale-[0.99]"> <ShoppingBag size={20} /> {product.price === 0 ? "加入清單" : "加入購物車"} </button> </div> </div> </div> ); };
     
-    // ShopPage 元件修正：版面固定、標籤列優化
+    // ShopPage 元件修正：修正標籤重複問題 (使用 Set 初始化為空)
     const ShopPage = ({ products, onProductSelect, initialFilter = '全部' }) => {
       const [filter, setFilter] = useState(initialFilter);
       const [searchTerm, setSearchTerm] = useState('');
       const [sortOption, setSortOption] = useState('default');
       const [activeCategory, setActiveCategory] = useState('nails'); 
 
-      // 篩選出符合分類的商品 (若是 'events' 分類，則篩選出所有有 * 標籤的商品)
       const categoryProducts = useMemo(() => {
         return products.filter(p => {
           if (activeCategory === 'events') {
-            return p.tags && p.tags.some(t => isSystemTag(t)); // 有任何系統標籤的都算
+            return p.tags && p.tags.some(t => isSystemTag(t)); 
           }
           const pCat = p.category || 'nails';
           return pCat === activeCategory;
         });
       }, [products, activeCategory]);
 
-      // 生成標籤 (區分活動與一般)
       const allTags = useMemo(() => {
-        const tags = new Set(['全部']);
+        // 修正：Set 不再預設包含 '全部'，避免重複
+        const tags = new Set();
         categoryProducts.forEach(p => p.tags && p.tags.forEach(t => {
            if (activeCategory === 'events') {
-             // 活動分類：只顯示活動標籤 (*開頭)
              if (isSystemTag(t)) tags.add(t);
            } else {
-             // 一般分類：隱藏活動標籤
              if (!isSystemTag(t)) tags.add(t);
            }
         }));
         return Array.from(tags);
       }, [categoryProducts, activeCategory]);
 
-      // 監聽 initialFilter 改變
       useEffect(() => {
         if (initialFilter && initialFilter !== '全部') {
             setFilter(initialFilter);
@@ -327,7 +317,6 @@
         }
       }, [initialFilter]);
 
-      // 切換分類時，僅重置 filter 為全部，保留版面
       const handleCategoryClick = (catId) => {
         setActiveCategory(catId);
         setFilter('全部');
@@ -337,8 +326,6 @@
         let result = categoryProducts.filter(product => {
             const matchesTag = filter === '全部' || (product.tags && product.tags.includes(filter));
             const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-            // 特殊邏輯：如果在 'events' 分類，不需要再檢查 activeCategory，因為 categoryProducts 已經篩過了
-            // 但如果 filter 是系統標籤，也必須確保商品屬於該標籤
             const matchesCategory = activeCategory === 'events' ? true : (filter !== '全部' || (product.category || 'nails') === activeCategory);
             
             return matchesTag && matchesSearch && matchesCategory;
@@ -350,7 +337,7 @@
       }, [categoryProducts, filter, searchTerm, sortOption, activeCategory]);
 
       return (
-        <div className="max-w-6xl mx-auto px-4 py-8 min-h-screen">
+        <div className="w-full max-w-6xl mx-auto px-4 py-8 min-h-screen">
           
           {/* 分類切換 (永遠顯示) */}
           <div className="flex justify-center mb-10 overflow-x-auto no-scrollbar">
@@ -394,10 +381,25 @@
           
           {/* 標籤過濾器 (永遠顯示，點擊全部可重置) */}
           {allTags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-8 pb-4 border-b border-[#E6CCB2]">
-                <span className="flex items-center text-[#5E4B40] text-sm font-bold mr-2"><Filter size={16} className="mr-1" /> {activeCategory === 'events' ? '活動篩選' : '風格'}：</span>
+            <div className="sticky top-[76px] z-40 bg-[#FAF7F2]/95 backdrop-blur-sm border-b border-[#E6CCB2] mb-8 py-4 flex items-center gap-2 flex-nowrap overflow-x-auto md:flex-wrap md:overflow-visible no-scrollbar transition-all">
+                <span className="flex items-center text-[#5E4B40] text-sm font-bold mr-2 whitespace-nowrap shrink-0">
+                  <Filter size={16} className="mr-1" /> {activeCategory === 'events' ? '活動篩選' : '風格'}：
+                </span>
+
+                {/* 手動加入全部按鈕 */}
+                <button 
+                  onClick={() => setFilter('全部')} 
+                  className={`whitespace-nowrap px-3 py-1.5 rounded-full text-sm transition-all shrink-0 ${filter === '全部' ? 'bg-[#8B5E3C] text-white shadow-md' : 'bg-[#F2EBE5] text-[#846C5B] hover:bg-[#E6CCB2]'}`}
+                >
+                  全部
+                </button>
+
                 {allTags.map(tag => (
-                <button key={tag} onClick={() => setFilter(tag)} className={`px-3 py-1.5 rounded-full text-sm transition-all ${filter === tag ? 'bg-[#8B5E3C] text-white shadow-md' : 'bg-[#F2EBE5] text-[#846C5B] hover:bg-[#E6CCB2]'}`}>
+                <button 
+                  key={tag} 
+                  onClick={() => setFilter(tag)} 
+                  className={`whitespace-nowrap px-3 py-1.5 rounded-full text-sm transition-all shrink-0 ${filter === tag ? 'bg-[#8B5E3C] text-white shadow-md' : 'bg-[#F2EBE5] text-[#846C5B] hover:bg-[#E6CCB2]'}`}
+                >
                   {tag.startsWith('*') ? tag.slice(1) : tag}
                 </button>
                 ))}
@@ -405,7 +407,7 @@
           )}
           
           {/* 新增 min-h-[600px] 防止高度跳動 */}
-          <div className="min-h-[600px]">
+          <div className="min-h-[600px] w-full">
             {displayedProducts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
                 {displayedProducts.map(product => <ProductCard key={product.id} product={product} onSelect={onProductSelect} />)}
